@@ -47,7 +47,7 @@ def get_visit_pts(mimic4_path:str, group_col:str, visit_col:str, admit_col:str, 
         visit[disch_col] = pd.to_datetime(visit[disch_col])        
         visit['los']=pd.to_timedelta(visit[disch_col]-visit[admit_col],unit='h')
         visit['los']=visit['los'].astype(str)
-        visit[['days', 'dummy','hours']] = visit['los'].str.split(' ', -1, expand=True)
+        visit[['days', 'dummy','hours']] = visit['los'].str.split(' ', expand=True)
         visit['los']=pd.to_numeric(visit['days'])
         visit=visit.drop(columns=['days', 'dummy','hours'])
         
@@ -151,7 +151,7 @@ def partition_by_readmit(df:pd.DataFrame, gap:datetime.timedelta, group_col:str,
 
         if group.shape[0] <= 1:
             #ctrl, invalid = validate_row(group.iloc[0], ctrl, invalid, max_year, disch_col, valid_col, gap)   # A group with 1 row has no readmission; goes to ctrl
-            ctrl = ctrl.append(group.iloc[0])
+            pd.concat([ctrl, group.iloc[[0]]])
         else:
             for idx in range(group.shape[0]-1):
                 visit_time = group.iloc[idx][disch_col]  # For each index (a unique hadm_id), get its timestamp
@@ -160,17 +160,17 @@ def partition_by_readmit(df:pd.DataFrame, gap:datetime.timedelta, group_col:str,
                     (group[admit_col] - visit_time <= gap)   # Distance between a timestamp and readmission must be within gap
                     ].shape[0] >= 1:                # If ANY rows meet above requirements, a readmission has occurred after that visit
 
-                    case = case.append(group.iloc[idx])
+                    case = pd.concat([case, group.iloc[[idx]]])
                 else:
                     # If no readmission is found, only add to ctrl if prediction window is guaranteed to be within the
                     # time range of the dataset (2008-2019). Visits with prediction windows existing in potentially out-of-range
                     # dates (like 2018-2020) are excluded UNLESS the prediction window takes place the same year as the visit,
                     # in which case it is guaranteed to be within 2008-2019
 
-                    ctrl = ctrl.append(group.iloc[idx])
+                    ctrl = pd.concat([ctrl, group.iloc[[idx]]])
 
             #ctrl, invalid = validate_row(group.iloc[-1], ctrl, invalid, max_year, disch_col, valid_col, gap)  # The last hadm_id datewise is guaranteed to have no readmission logically
-            ctrl = ctrl.append(group.iloc[-1])
+            ctrl = pd.concat([ctrl, group.iloc[[-1]]])
             #print(f"[ {gap.days} DAYS ] {case.shape[0] + ctrl.shape[0]}/{df.shape[0]} {visit_col}s processed")
 
     print("[ READMISSION LABELS FINISHED ]")
