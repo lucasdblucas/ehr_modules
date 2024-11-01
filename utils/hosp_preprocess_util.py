@@ -272,7 +272,7 @@ def ndc_meds(med, mapping:str) -> pd.DataFrame:
     
     return med
 
-def preproc_labs(dataset_path: str, version_path:str, cohort_path:str, time_col:str, anchor_col:str, dtypes: dict, usecols: list) -> pd.DataFrame:
+def preproc_labs(dataset_path: str, data_path: str, version_path:str, cohort_path:str, time_col:str, anchor_col:str, dtypes: dict, usecols: list) -> pd.DataFrame:
     """Function for getting hosp observations pertaining to a pickled cohort. Function is structured to save memory when reading and transforming data."""
     
     usecols = ['itemid','subject_id','hadm_id','charttime','valuenum','valueuom']
@@ -289,9 +289,10 @@ def preproc_labs(dataset_path: str, version_path:str, cohort_path:str, time_col:
     df_cohort=pd.DataFrame()
     cohort = pd.read_csv(cohort_path, compression='gzip', parse_dates = ['admittime'])
     if version_path=="mimiciv/1.0":
-        adm = pd.read_csv("./"+version_path+"/core/admissions.csv.gz", header=0, index_col=None, compression='gzip', usecols=['subject_id', 'hadm_id', 'admittime', 'dischtime'], parse_dates=['admittime', 'dischtime'])
+        adm = pd.read_csv(os.path.join(data_path, version_path, "core/admissions.csv.gz"), header=0, index_col=None, compression='gzip', usecols=['subject_id', 'hadm_id', 'admittime', 'dischtime'], parse_dates=['admittime', 'dischtime'])
     elif version_path=="mimiciv/2.0":
-        adm = pd.read_csv("./"+version_path+"/hosp/admissions.csv.gz", header=0, index_col=None, compression='gzip', usecols=['subject_id', 'hadm_id', 'admittime', 'dischtime'], parse_dates=['admittime', 'dischtime'])
+        # print(os.path.join(data_path, version_path, "hosp/admissions.csv.gz"))
+        adm = pd.read_csv(os.path.join(data_path, version_path, "hosp/admissions.csv.gz"), header=0, index_col=None, compression='gzip', usecols=['subject_id', 'hadm_id', 'admittime', 'dischtime'], parse_dates=['admittime', 'dischtime'])
         
     # read module w/ custom params
     chunksize = 10000000
@@ -309,7 +310,7 @@ def preproc_labs(dataset_path: str, version_path:str, cohort_path:str, time_col:
         del chunkna['hadm_id']
         chunkna=chunkna.rename(columns={'hadm_id_new':'hadm_id'})
         chunkna=chunkna[['subject_id','hadm_id','itemid','charttime','valuenum','valueuom']]
-        chunk=chunk.append(chunkna, ignore_index=True)
+        chunk = pd.concat([chunk, chunkna], ignore_index=True)
         #print(chunk['hadm_id'].isna().sum())
          
         chunk = chunk.merge(cohort[['hadm_id', 'admittime','dischtime']], how='inner', left_on='hadm_id', right_on='hadm_id')
@@ -324,7 +325,7 @@ def preproc_labs(dataset_path: str, version_path:str, cohort_path:str, time_col:
         if df_cohort.empty:
             df_cohort=chunk
         else:
-            df_cohort=df_cohort.append(chunk, ignore_index=True)
+            df_cohort = pd.concat([df_cohort, chunk], ignore_index=True)
     
     #labs = pd.read_csv(dataset_path, compression='gzip', usecols=usecols, dtype=dtypes, parse_dates=[time_col]).drop_duplicates()
     

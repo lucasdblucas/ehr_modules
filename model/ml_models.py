@@ -109,17 +109,24 @@ class ML_models():
             gen_encoder.fit(X_train['gender'])
             eth_encoder.fit(X_train['ethnicity'])
             ins_encoder.fit(X_train['insurance'])
+            
+            
+            
             #age_encoder.fit(X_train['Age'])
             X_train['gender']=gen_encoder.transform(X_train['gender'])
             X_train['ethnicity']=eth_encoder.transform(X_train['ethnicity'])
             X_train['insurance']=ins_encoder.transform(X_train['insurance'])
             #X_train['Age']=age_encoder.transform(X_train['Age'])
 
+            
             print(X_train.shape)
             print(Y_train.shape)
             print('test_hids',len(test_hids))
             X_test,Y_test=self.getXY(test_hids,labels,concat_cols)
             self.test_data=X_test.copy(deep=True)
+            
+            X_test['ethnicity'] = X_test['ethnicity'].apply(lambda x: x if x in eth_encoder.classes_ else 'OTHER')
+            
             X_test['gender']=gen_encoder.transform(X_test['gender'])
             X_test['ethnicity']=eth_encoder.transform(X_test['ethnicity'])
             X_test['insurance']=ins_encoder.transform(X_test['insurance'])
