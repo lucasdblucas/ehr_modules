@@ -1,0 +1,176 @@
+---
+cross_validation:
+    alignment_dict:
+        gender: 性别
+        PH (Arterial): dX_PH
+        age: 年龄
+        Respiratory Rate (Total): dX_tX_呼吸频率
+        O2 saturation pulseoxymetry: dX_tX_SPO2
+        Arterial O2 pressure: dX_PaO2（mmHg）
+        Inspired O2 Fraction: dX_FiO2(%)
+        PF_ratio: dX_PaO2（mmHg） / FiO2（%）
+    window: 48
+    smoothing_band: 50
+    loss_function: MultiClass
+    iterations: 300
+    depth: 5
+    learning_rate: 0.03
+    centers: [50, 150, 250, 350]
+    class_names: [Severe, Moderate, Mild, No_ARDS]
+    limit_feas: [gender, '223830', '224690', age, '220277', '220224', '223835', PF_ratio]
+    forbidden_feas: []
+    slice_len: 192
+
+dataset_report:
+    dataset_name: ards # ['ards', 'raw', 'vent']
+    dataset_version: ards@origin
+    basic: true
+    dynamic_dist: true
+    static_dist: true
+
+ards_feature_explore:
+    dataset_version: ards@origin
+    coverrate:
+        enabled: true
+        class_names: [Severe, Moderate, Mild, No_ARDS]
+        window: 16
+        centers: [50, 150, 250, 350]
+    plot_admission_dist: true
+    plot_chart_vis:
+        enabled: true
+        collect_list: [transfer, admission]
+    plot_samples:
+        enabled: true
+        n_sample: 10
+        features:
+            - Arterial O2 pressure
+            - Inspired O2 Fraction
+            - '220045'
+    plot_time_series:
+        enabled: false
+        names:
+            - PF_ratio
+        n_sample: 400
+        n_per_plots: 40
+    correlation:
+        enabled: false
+        target: PF_ratio
+    miss_mat: true
+    first_ards_time: false
+    feature_count: true
+
+raw_feature_explore:
+    dataset_version: raw@version
+    plot_admission_dist: true
+    plot_chart_vis:
+        enabled: true
+        collect_list: [transfer, admission]
+    plot_samples:
+        enabled: false
+        n_sample: 50
+        features:
+            - Arterial O2 pressure
+            - Inspired O2 Fraction
+    abnormal_dist:
+        enabled: true
+        value_limitation:
+            Inspired O2 Fraction: {min: 21, max: 100}
+            Arterial O2 pressure: {min: 0, max: 500}
+            Respiratory Rate: {min: 1, max: 120}
+            Arterial O2 Saturation: {min: 50, max: 100}
+            O2 saturation pulseoxymetry: {min: 50, max: 100}
+            Daily Weight: {min: 30, max: 200}
+    miss_mat: true
+    feature_count: true
+    correlation: false
+
+vent_feature_explore:
+    dataset_version: vent@origin
+    correlation:
+        enabled: true
+        target: vent_status
+    miss_mat: true
+    vent_statistics: true
+    vent_sample:
+        enabled: true
+        n_plot: 10
+    
+ards_catboost_dynamic:
+    dataset_version: ards@origin
+    window: 16
+    soft_label: false
+    smoothing_band: 50
+    loss_function: MultiClass
+    iterations: 600
+    depth: 5
+    learning_rate: 0.05
+    centers: [50, 150, 250, 350]
+    class_names: [Severe, Moderate, Mild, No_ARDS]
+    limit_feas: []
+    forbidden_feas: ['220224', '223835', 'PF_ratio']
+
+ards_lstm:
+    dataset_version: ards@filled
+    window: 16
+    device: 'cuda:1'
+    centers: [50, 150, 250, 350]
+    class_names: [Severe, Moderate, Mild, No_ARDS]
+    hidden_size: 128
+    batch_size: 2048
+    epoch: 100
+    lr: 0.001
+    limit_feas: []
+    forbidden_feas: ['220224', '223835', 'PF_ratio']
+
+ards_nearest_4cls:
+    dataset_version: ards@origin
+    window: 16
+    soft_label: false
+    centers: [50, 150, 250, 350]
+    class_names: [Severe, Moderate, Mild, No_ARDS]
+    smoothing_band: 50
+
+ards_logistic_reg:
+    dataset_version: ards@filled
+    window: 16
+    centers: [50, 150, 250, 350]
+    class_names: [Severe, Moderate, Mild, No_ARDS]
+    max_iter: 1000
+    limit_feas: []
+    forbidden_feas: ['220224', '223835', 'PF_ratio']
+
+vent_nearest_2cls:
+    dataset_version: vent@origin
+    window: 8
+    centers: [0, 1]
+    class_names: ['no_vent', 'use_vent']
+
+vent_catboost_dynamic:
+    dataset_version: vent@origin
+    window: 8
+    loss_function: MultiClass
+    iterations: 400
+    depth: 5
+    learning_rate: 0.03
+    centers: [0, 1]
+    class_names: ['no_vent', 'use_vent']
+    limit_feas: []
+    forbidden_feas: ['vent_status']
+
+vent_logistic_reg:
+    dataset_version: vent@filled
+    window: 8
+    centers: [0, 1]
+    class_names: ['no_vent', 'use_vent']
+    max_iter: 1000
+
+vent_lstm:
+    dataset_version: vent@filled
+    window: 8
+    device: 'cuda:1'
+    centers: [0, 1]
+    class_names: ['no_vent', 'use_vent']
+    hidden_size: 128
+    batch_size: 2048
+    epoch: 100
+    lr: 0.001

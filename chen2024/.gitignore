@@ -1,0 +1,17 @@
+mimic-iv-2.2.zip
+__pycache__
+/data/
+/outputs/
+*.pyc
+*.pt
+*.log
+catboost_info/
+nohup.out
+simhei.ttf
+generate_requirements.sh
+test_plot/
+tools/module_test.py
+launch_list.yml
+
+
+test.py
